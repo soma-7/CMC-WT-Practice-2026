@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AmplicodeJpaDataSourceConfig">
+    <data-sources>
+      <data-source id="0b8de1fe-0e63-471c-89b5-8a794296579e" name="webprak." url="jdbc:postgresql://localhost/webprak." driverClass="org.postgresql.Driver" />
+    </data-sources>
+    <option name="preferredDataSourceId" value="0b8de1fe-0e63-471c-89b5-8a794296579e" />
+  </component>
+</project>
