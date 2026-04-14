@@ -3,6 +3,8 @@ package webprak.models;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @Entity
 @Table(name = "operations")
@@ -29,6 +31,7 @@ public class Operation implements CommonEntity<Long> {
     private Profile profile;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "type", nullable = false)
     private OperationType type;
 

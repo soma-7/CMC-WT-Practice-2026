@@ -3,6 +3,8 @@ package webprak.models;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @Entity
 @Table(name = "profiles")
@@ -29,7 +31,8 @@ public class Profile implements CommonEntity<Long> {
     @Column(name = "balance", nullable = false)
     private Double balance = 0.0;
 
-    @Column(name = "other", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private String other;
 
     @Column(name = "created_at")

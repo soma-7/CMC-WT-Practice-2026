@@ -2,6 +2,8 @@ package webprak.models;
 
 import lombok.*;
 import jakarta.persistence.*;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @Entity
 @Table(name = "services")
@@ -21,9 +23,11 @@ public class Service implements CommonEntity<Long> {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "includes", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private String includes;
 
-    @Column(name = "other", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private String other;
 }
