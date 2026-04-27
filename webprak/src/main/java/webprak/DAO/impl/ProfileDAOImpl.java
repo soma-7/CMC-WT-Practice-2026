@@ -58,6 +58,9 @@ public class ProfileDAOImpl extends CommonDAOImpl<Profile, Long> implements Prof
         String orderField = switch (sortBy) {
             case "balance" -> " p.balance";
             case "name" -> " p.name";
+            case "created_at" -> " p.created_at";
+            case "phone" -> " p.phone";
+            case "client_id" -> " c.client_id";
             default -> " p.profile_id";
         };
         String whereClause = "";
@@ -101,5 +104,18 @@ public class ProfileDAOImpl extends CommonDAOImpl<Profile, Long> implements Prof
                 .getSingleResult();
         double diff = profile.getBalance() - sumOps;
         return Math.abs(diff) < 1e-9;
+    }
+
+    @Override
+    public long countProfiles(String searchTerm) {
+        String sql = "SELECT COUNT(*) FROM profiles p JOIN clients c ON p.client_id = c.client_id ";
+        if (searchTerm != null && !searchTerm.isEmpty()) {
+            sql += "WHERE p.name ILIKE :search OR p.phone ILIKE :search";
+        }
+        Query query = entityManager.createNativeQuery(sql);
+        if (searchTerm != null && !searchTerm.isEmpty()) {
+            query.setParameter("search", "%" + searchTerm + "%");
+        }
+        return ((Number) query.getSingleResult()).longValue();
     }
 }

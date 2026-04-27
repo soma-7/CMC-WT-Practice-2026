@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="pagination(baseUrl, currentPage, totalPages, pageSize, sortBy, asc, search)"
+     th:if="${totalPages > 1}">
+    <ul class="pagination">
+        <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+            <a class="page-link"
+               th:href="@{${baseUrl}(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, asc=${asc}, search=${search})}">Пред</a>
+        </li>
+        <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+            <a class="page-link"
+               th:href="@{${baseUrl}(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, asc=${asc}, search=${search})}">След</a>
+        </li>
+    </ul>
+    <span class="ms-2">Страница <strong th:text="${currentPage + 1}"></strong> из <strong th:text="${totalPages}"></strong></span>
+</nav>
+</body>
+</html>

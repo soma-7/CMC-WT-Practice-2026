@@ -9,4 +9,5 @@ public interface ProfileDAO extends CommonDAO<Profile, Long> {
     List<Object[]> getAllProfiles(int pageNum, int pageSize, String sortBy, boolean ascending, String searchTerm);
     Double updateBalance(Long profileId, Double delta);
     boolean verifyBalanceConsistency(Long profileId);
+    long countProfiles(String searchTerm);
 }

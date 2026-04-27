@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Клиент #<span th:text="${client.id}"></span></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div th:insert="~{components/sidebar :: sidebar}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <h1 class="mt-4">Клиент #<span th:text="${client.id}"></span></h1>
+
+            <!-- Информация, доступная только для чтения -->
+            <dl class="row">
+                <dt class="col-sm-2">ID</dt>
+                <dd class="col-sm-10" th:text="${client.id}"></dd>
+                <dt class="col-sm-2">Дата регистрации</dt>
+                <dd class="col-sm-10" th:text="${regDate}"></dd>
+            </dl>
+
+            <!-- Форма редактирования -->
+            <form th:action="@{/clients/{id}/edit(id=${client.id})}" method="post" class="mb-4">
+                <div class="mb-3">
+                    <label for="info" class="form-label">Информация (JSON)</label>
+                    <textarea class="form-control" id="info" name="info" rows="6" th:text="${client.info}"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                <a th:href="@{/clients}" class="btn btn-secondary">Назад к списку</a>
+            </form>
+
+            <!-- Удаление клиента -->
+            <form th:action="@{/clients/{id}/delete(id=${client.id})}" method="post"
+                  onsubmit="return confirm('Удалить клиента и все его профили?')">
+                <button type="submit" class="btn btn-danger">Удалить клиента</button>
+            </form>
+        </main>
+    </div>
+</div>
+</body>
+</html>

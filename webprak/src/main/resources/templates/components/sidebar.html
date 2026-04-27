@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" th:href="@{/}">Главная</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/clients}">Клиенты</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/profiles}">Профили</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/services}">Услуги</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/operations}">Операции</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+</body>
+</html>

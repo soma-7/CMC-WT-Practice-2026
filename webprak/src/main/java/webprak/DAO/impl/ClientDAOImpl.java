@@ -7,7 +7,7 @@ import webprak.DAO.ClientDAO;
 import webprak.models.Client;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 
 @Repository
 public class ClientDAOImpl extends CommonDAOImpl<Client, Long> implements ClientDAO {
@@ -36,7 +36,7 @@ public class ClientDAOImpl extends CommonDAOImpl<Client, Long> implements Client
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> getAllClients(int pageNum, int pageSize, String sortBy, boolean ascending) {
+    public List<Object[]> getAllClients(int pageNum, int pageSize, String sortBy, boolean ascending, String search) {
         String orderDirection = ascending ? "ASC" : "DESC";
         String orderField;
         switch (sortBy) {
@@ -45,28 +45,52 @@ public class ClientDAOImpl extends CommonDAOImpl<Client, Long> implements Client
             default:                 orderField = " c.client_id";
         }
 
-        String sql =
-                """
+        String whereSearch = "";
+        if (search != null && !search.isEmpty()) {
+            whereSearch = " WHERE CAST(c.client_id AS TEXT) ILIKE :search ";
+        }
+
+        String sql = """
                 SELECT c.client_id as client_id,
                        c.registration_date as registration_date,
                        COUNT(p.profile_id) as profile_count,
                        COALESCE(SUM(p.balance), 0) as total_balance
                 FROM clients c
                 LEFT JOIN profiles p ON c.client_id = p.client_id
-                GROUP BY c.client_id
-                ORDER BY""" + orderField + " " + orderDirection;
+                """ + whereSearch +
+                " GROUP BY c.client_id ORDER BY " + orderField + " " + orderDirection;
 
         Query nativeQuery = entityManager.createNativeQuery(sql);
+        if (search != null && !search.isEmpty()) {
+            nativeQuery.setParameter("search", "%" + search + "%");
+        }
         nativeQuery.setFirstResult(pageNum * pageSize);
         nativeQuery.setMaxResults(pageSize);
         return nativeQuery.getResultList();
     }
 
     @Override
+    public long countClients(String search) {
+        String whereSearch = "";
+        if (search != null && !search.isEmpty()) {
+            whereSearch = " WHERE CAST(c.client_id AS TEXT) ILIKE :search ";
+        }
+        String sql = """
+                SELECT COUNT(DISTINCT c.client_id)
+                FROM clients c
+                LEFT JOIN profiles p ON c.client_id = p.client_id
+                """ + whereSearch;
+        Query nativeQuery = entityManager.createNativeQuery(sql);
+        if (search != null && !search.isEmpty()) {
+            nativeQuery.setParameter("search", "%" + search + "%");
+        }
+        return ((Number) nativeQuery.getSingleResult()).longValue();
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public List<Object[]> getClientsByRegistrationDateRange(int pageNum, int pageSize, LocalDateTime start, LocalDateTime end) {
-        String sql =
-        """    
+        String sql = """
             SELECT c.client_id as client_id,
                    c.registration_date as registration_date,
                    COUNT(p.profile_id) as profile_count,
@@ -82,15 +106,13 @@ public class ClientDAOImpl extends CommonDAOImpl<Client, Long> implements Client
         nativeQuery.setParameter("end", end);
         nativeQuery.setFirstResult(pageNum * pageSize);
         nativeQuery.setMaxResults(pageSize);
-
         return nativeQuery.getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public List<Object[]> getClientWithProfiles(Long clientId) {
-        String sql =
-        """
+        String sql = """
             SELECT c.client_id,
                    c.registration_date,
                    c.info,
