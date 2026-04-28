@@ -25,12 +25,14 @@ public class OperationDAOImpl extends CommonDAOImpl<Operation, Long> implements 
         if (requiresService && serviceId == null) {
             return null;
         }
-        String updateSql = "UPDATE profiles SET balance = balance + :delta WHERE profile_id = :pid AND balance + :delta >= 0";
-        int updated = entityManager.createNativeQuery(updateSql)
-                .setParameter("delta", balanceChange)
-                .setParameter("pid", profileId)
-                .executeUpdate();
-        if (updated == 0) throw new IllegalStateException("Insufficient balance or profile not found");
+
+        Profile profile = entityManager.find(Profile.class, profileId);
+        if (profile == null) {
+            throw new IllegalStateException("Profile not found");
+        }
+        if (profile.getBalance() + balanceChange < 0) {
+            throw new IllegalStateException("Insufficient balance");
+        }
 
         Operation.OperationType opType;
         switch (type) {
@@ -41,9 +43,12 @@ public class OperationDAOImpl extends CommonDAOImpl<Operation, Long> implements 
             case "service_cancellation": opType = Operation.OperationType.service_cancellation; break;
             default: return null;
         }
-        Profile profile = entityManager.find(Profile.class, profileId);
+
         Service service = null;
-        if (requiresService) service = entityManager.find(Service.class, serviceId);
+        if (requiresService) {
+            service = entityManager.find(Service.class, serviceId);
+        }
+
         Operation operation = new Operation(null, profile, opType, LocalDateTime.now(), service, balanceChange, description);
         save(operation);
         profile.setBalance(profile.getBalance() + balanceChange);
@@ -55,17 +60,19 @@ public class OperationDAOImpl extends CommonDAOImpl<Operation, Long> implements 
     public List<Object[]> getAllOperations(int pageNum, int pageSize, Long profileId, Long clientId, String type,
                                            Long serviceId, LocalDateTime from, LocalDateTime to) {
         StringBuilder sql = new StringBuilder("""
-        SELECT o.operation_id, o.type, o.timestamp, o.balance_change, o.description,
-               p.profile_id, p.name, p.phone,
-               s.service_id, s.name
-        FROM operations o
-        JOIN profiles p ON o.profile_id = p.profile_id
-        LEFT JOIN services s ON o.service_id = s.service_id
-        WHERE 1=1
-    """);
+    SELECT o.operation_id, o.type, o.timestamp, o.balance_change, o.description,
+           p.profile_id, p.name, p.phone,
+           s.service_id, s.name,
+           c.client_id
+    FROM operations o
+    JOIN profiles p ON o.profile_id = p.profile_id
+    JOIN clients c ON p.client_id = c.client_id
+    LEFT JOIN services s ON o.service_id = s.service_id
+    WHERE 1=1
+""");
         if (profileId != null) sql.append(" AND o.profile_id = :profileId");
-        if (clientId != null) sql.append(" AND p.client_id = :clientId");
-        if (type != null) sql.append(" AND o.type = CAST(:type AS operation_type)");
+        if (clientId != null) sql.append(" AND c.client_id = :clientId");
+        if (type != null && !type.isEmpty()) sql.append(" AND o.type = CAST(:type AS operation_type)");
         if (serviceId != null) sql.append(" AND o.service_id = :serviceId");
         if (from != null) sql.append(" AND o.timestamp >= :from");
         if (to != null) sql.append(" AND o.timestamp <= :to");
@@ -74,12 +81,39 @@ public class OperationDAOImpl extends CommonDAOImpl<Operation, Long> implements 
         Query query = entityManager.createNativeQuery(sql.toString());
         if (profileId != null) query.setParameter("profileId", profileId);
         if (clientId != null) query.setParameter("clientId", clientId);
-        if (type != null) query.setParameter("type", type);
+        if (type != null && !type.isEmpty()) query.setParameter("type", type);
         if (serviceId != null) query.setParameter("serviceId", serviceId);
         if (from != null) query.setParameter("from", from);
         if (to != null) query.setParameter("to", to);
         query.setFirstResult(pageNum * pageSize);
         query.setMaxResults(pageSize);
         return query.getResultList();
+    }
+
+    @Override
+    public long countOperations(Long profileId, Long clientId, String type, Long serviceId, LocalDateTime from, LocalDateTime to) {
+        StringBuilder sql = new StringBuilder("""
+    SELECT COUNT(*)
+    FROM operations o
+    JOIN profiles p ON o.profile_id = p.profile_id
+    JOIN clients c ON p.client_id = c.client_id
+    LEFT JOIN services s ON o.service_id = s.service_id
+    WHERE 1=1
+""");
+        if (profileId != null) sql.append(" AND o.profile_id = :profileId");
+        if (clientId != null) sql.append(" AND c.client_id = :clientId");
+        if (type != null && !type.isEmpty()) sql.append(" AND o.type = CAST(:type AS operation_type)");
+        if (serviceId != null) sql.append(" AND o.service_id = :serviceId");
+        if (from != null) sql.append(" AND o.timestamp >= :from");
+        if (to != null) sql.append(" AND o.timestamp <= :to");
+
+        Query query = entityManager.createNativeQuery(sql.toString());
+        if (profileId != null) query.setParameter("profileId", profileId);
+        if (clientId != null) query.setParameter("clientId", clientId);
+        if (type != null && !type.isEmpty()) query.setParameter("type", type);
+        if (serviceId != null) query.setParameter("serviceId", serviceId);
+        if (from != null) query.setParameter("from", from);
+        if (to != null) query.setParameter("to", to);
+        return ((Number) query.getSingleResult()).longValue();
     }
 }

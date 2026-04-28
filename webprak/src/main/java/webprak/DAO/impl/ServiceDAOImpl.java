@@ -79,4 +79,34 @@ public class ServiceDAOImpl extends CommonDAOImpl<Service, Long> implements Serv
         nativeQuery.setMaxResults(pageSize);
         return nativeQuery.getResultList();
     }
+
+    @Override
+    public long countServices(String tagKey, String search) {
+        String sql = """
+                SELECT COUNT(*)
+                FROM services
+                WHERE 1=1
+                """ +
+                (tagKey != null && !tagKey.isEmpty() ?
+                        (tagKey.contains("=") ?
+                         " AND includes->> :tagKeyEqualKey = :tagKeyEqualValue" :
+                         " AND jsonb_exists(includes, :tagKey)") : "") +
+                (search != null && !search.isEmpty() ?
+                        " AND (name ILIKE :search OR description ILIKE :search OR CAST(includes AS text) ILIKE :search OR CAST(other AS text) ILIKE :search)" : "");
+
+        Query nativeQuery = entityManager.createNativeQuery(sql);
+        if (tagKey != null && !tagKey.isEmpty()) {
+            if (tagKey.contains("=")) {
+                String[] parts = tagKey.split("=", 2);
+                nativeQuery.setParameter("tagKeyEqualKey", parts[0]);
+                nativeQuery.setParameter("tagKeyEqualValue", parts[1]);
+            } else {
+                nativeQuery.setParameter("tagKey", tagKey);
+            }
+        }
+        if (search != null && !search.isEmpty()) {
+            nativeQuery.setParameter("search", "%" + search + "%");
+        }
+        return ((Number) nativeQuery.getSingleResult()).longValue();
+    }
 }

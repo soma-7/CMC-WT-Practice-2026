@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить операцию</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div th:insert="~{components/sidebar :: sidebar}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <h1 class="mt-4">Новая операция</h1>
+
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <form th:action="@{/operations/add}" method="post">
+                <div class="mb-3">
+                    <label for="profileId" class="form-label">ID профиля</label>
+                    <input type="number" class="form-control" id="profileId" name="profileId" required>
+                </div>
+                <div class="mb-3">
+                    <label for="type" class="form-label">Тип операции</label>
+                    <select name="type" id="type" class="form-select" required>
+                        <option value="">-- Выберите тип --</option>
+                        <option th:each="t : ${operationTypes}" th:value="${t}" th:text="${t}"></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="serviceId" class="form-label">ID услуги (если применимо)</label>
+                    <input type="number" class="form-control" id="serviceId" name="serviceId">
+                    <div class="form-text">Обязательно для всех типов, кроме deposit и withdrawal.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="balanceChange" class="form-label">Изменение баланса</label>
+                    <input type="number" step="0.01" class="form-control" id="balanceChange" name="balanceChange" required>
+                    <div class="form-text">Положительное число для пополнения, отрицательное для списания/платежа.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Описание (необязательно)</label>
+                    <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Создать операцию</button>
+                <a th:href="@{/operations}" class="btn btn-secondary">Отмена</a>
+            </form>
+        </main>
+    </div>
+</div>
+</body>
+</html>
