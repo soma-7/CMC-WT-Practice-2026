@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import webprak.DAO.OperationDAO;
 import webprak.models.Operation;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -45,7 +47,7 @@ public class OperationController {
 
         String baseUrl = "/operations";
         if (queryString.length() > 0) {
-            baseUrl += "?" + queryString.substring(1); // pagination hack
+            baseUrl += "?" + queryString.substring(1);
         }
 
         model.addAttribute("operations", operations);
@@ -83,14 +85,14 @@ public class OperationController {
         try {
             Long operationId = operationDAO.createOperation(profileId, type, serviceId, balanceChange, description);
             if (operationId == null) {
-                model.addAttribute("error", "Неверные параметры операции.");
-                model.addAttribute("operationTypes", Operation.OperationType.values());
-                return "operations/add";
+                return "redirect:/error?message=" + URLEncoder.encode("Неверные параметры операции", StandardCharsets.UTF_8);
             }
-        } catch (IllegalStateException e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("operationTypes", Operation.OperationType.values());
-            return "operations/add";
+        } catch (Exception e) {   // ловим все исключения, включая обёрнутые IllegalArgumentException
+            String msg = e.getMessage();
+            if (msg == null || msg.isEmpty()) {
+                msg = "Ошибка при создании операции";
+            }
+            return "redirect:/error?message=" + URLEncoder.encode(msg, StandardCharsets.UTF_8);
         }
         return "redirect:/operations";
     }

@@ -48,7 +48,7 @@ class ClientDAOTest extends AbstractDAOTests {
         Long cid2 = clientDAO.createClient("{\"name\": \"maria\"}");
         Long pid21 = profileDAO.createProfile(cid2, "p3", "333", "{}");
         profileDAO.updateBalance(pid11, 100.0);
-        List<Object[]> list = clientDAO.getAllClients(0, 10, "totalBalance", false);
+        List<Object[]> list = clientDAO.getAllClients(0, 10, "totalBalance", false, "");
         assertThat(list).hasSize(2);
         Object[] row = list.get(0);
         assertThat(row[2]).isEqualTo(2L); // profile_count

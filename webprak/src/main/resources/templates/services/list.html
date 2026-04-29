@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Список услуг</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div th:insert="~{components/sidebar :: sidebar}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <h1 class="mt-4">Услуги</h1>
+
+            <!-- Фильтр, поиск и сортировка -->
+            <form th:action="@{/services}" method="get" class="row g-3 mb-3">
+                <div class="col-auto">
+                    <input type="text" name="search" class="form-control" placeholder="Поиск по названию/описанию"
+                           th:value="${search}" />
+                </div>
+                <div class="col-auto">
+                    <input type="text" name="tagKey" class="form-control" placeholder="Тег или тег=значение"
+                           th:value="${tagKey}" />
+                </div>
+                <div class="col-auto">
+                    <select name="sortBy" class="form-select">
+                        <option value="name" th:selected="${sortBy == 'name'}">Название</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select name="asc" class="form-select">
+                        <option value="true" th:selected="${asc}">По возрастанию</option>
+                        <option value="false" th:selected="${!asc}">По убыванию</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Применить</button>
+                </div>
+                <div class="col-auto">
+                    <a th:href="@{/services/add}" class="btn btn-success">Добавить услугу</a>
+                </div>
+            </form>
+
+            <!-- Таблица услуг -->
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Теги (includes)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${services}">
+                    <!-- 0:service_id, 1:name, 2:description, 3:includes, 4:other -->
+                    <td>
+                        <a th:href="@{/services/{id}(id=${row[0]})}" th:text="${row[0]}"></a>
+                    </td>
+                    <td th:text="${row[1]}"></td>
+                    <td th:text="${#strings.abbreviate(row[2] != null ? row[2] : '', 80)}"></td>
+                    <td th:text="${#strings.abbreviate(row[3] != null ? row[3] : '', 60)}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- Пагинация -->
+            <div th:insert="~{components/pagination :: pagination(
+                baseUrl='/services',
+                currentPage=${currentPage},
+                totalPages=${totalPages},
+                pageSize=${pageSize},
+                sortBy=${sortBy},
+                asc=${asc},
+                search=${search}
+            )}"></div>
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

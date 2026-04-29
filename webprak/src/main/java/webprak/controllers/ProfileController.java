@@ -5,8 +5,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import webprak.DAO.ProfileDAO;
+import webprak.models.Client;
+import webprak.DAO.ClientDAO;
 import webprak.models.Profile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Controller
@@ -15,6 +19,9 @@ public class ProfileController {
 
     @Autowired
     private ProfileDAO profileDAO;
+
+    @Autowired
+    private ClientDAO clientDAO;
 
     @GetMapping
     public String listProfiles(@RequestParam(defaultValue = "0") int page,
@@ -48,11 +55,13 @@ public class ProfileController {
                              @RequestParam String phone,
                              @RequestParam(required = false) String other,
                              Model model) {
+        Client client = clientDAO.getById(clientId);
+        if (client == null) {
+            return "redirect:/error?message=" + URLEncoder.encode("Клиент с ID " + clientId + " не найден", StandardCharsets.UTF_8);
+        }
         Long newId = profileDAO.createProfile(clientId, name, phone, other);
         if (newId == null) {
-            model.addAttribute("error",
-                    "Не удалось создать профиль. Возможно, телефон уже занят или клиент не существует.");
-            return "profiles/add";
+            return "redirect:/error?message=" + URLEncoder.encode("Телефон уже занят или другие данные некорректны", StandardCharsets.UTF_8);
         }
         return "redirect:/profiles/" + newId;
     }
@@ -76,9 +85,7 @@ public class ProfileController {
         try {
             profileDAO.updateProfile(id, name, phone, other);
         } catch (Exception e) {
-            model.addAttribute("profile", profileDAO.getById(id));
-            model.addAttribute("error", "Ошибка обновления: " + e.getMessage());
-            return "profiles/edit";
+            return "redirect:/error?message=" + URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Ошибка обновления", StandardCharsets.UTF_8);
         }
         return "redirect:/profiles/" + id;
     }
